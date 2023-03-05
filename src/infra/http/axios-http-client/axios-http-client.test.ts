@@ -1,23 +1,7 @@
+import { mockAxios, mockPostRequest, mockResponse } from '@/infra/test/mock-axios'
 import { AxiosHttpClient } from './axios-http-client'
 
-import axios from 'axios'
-import faker from 'faker'
-import { HttpPostParams } from '@/data/protocols/http'
-
 jest.mock('axios')
-const mockAxios = axios as jest.Mocked<typeof axios>
-
-const mockResponse = {
-  status: faker.datatype.number(),
-  data: faker.random.objectElement()
-}
-
-mockAxios.post.mockResolvedValue(mockResponse)
-
-const mockPostRequest = (): HttpPostParams<unknown> => ({
-  url: faker.internet.url(),
-  body: faker.random.objectElement()
-})
 
 describe('AxiosHttpClient', () => {
   test('should call axios with right params', async () => {
