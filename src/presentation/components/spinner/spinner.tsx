@@ -8,7 +8,10 @@ type SpinnerProps = {
 const Spinner: React.FC<SpinnerProps> = ({ style }: SpinnerProps) => {
   return (
     <div className={`${styles.spinner} ${style}`}>
-      <div /><div /><div /><div />
+      <div />
+      <div />
+      <div />
+      <div />
     </div>
   )
 }
