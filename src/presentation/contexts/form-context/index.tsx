@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react'
 
-const FormContext = createContext({} as FormStateProps)
+const FormContext = createContext(null)
 
 type FormContextProps = {
   children: React.ReactNode
@@ -9,22 +9,27 @@ type FormContextProps = {
 type FormStateProps = {
   isLoading: boolean
   errorMessage: string
+  email: string
+  password: string
 }
 
 const FormContextProvider = ({ children }: FormContextProps) => {
-  const [formState] = useState<FormStateProps>({
+  const [formState, setFormState] = useState<FormStateProps>({
     isLoading: false,
     errorMessage: '',
+    email: '',
+    password: '',
   })
 
   return (
-    <FormContext.Provider value={formState}>{children}</FormContext.Provider>
+    <FormContext.Provider value={{ formState, setFormState }}>
+      {children}
+    </FormContext.Provider>
   )
 }
 
 export const useFormContext = () => {
   const ctx = useContext(FormContext)
-  console.log(ctx)
   if (!ctx) {
     throw new Error('useFormContext must be used within FormContextProvider')
   }
