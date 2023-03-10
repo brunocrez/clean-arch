@@ -1,14 +1,35 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import styles from './login-styles.scss'
-import { Header, Footer, FormStatus } from '@/presentation/components'
-import Input from '@/presentation/components/input/input'
-import FormContextProvider from '@/presentation/contexts/form-context'
+import { Header, Footer, FormStatus, Input } from '@/presentation/components'
+import { FormContext } from '@/presentation/contexts/form-context'
+import { Validation } from '@/presentation/protocols/validation'
 
-const Login: React.FC = () => {
+type LoginProps = {
+  validation: Validation
+}
+
+const Login: React.FC<LoginProps> = ({ validation }: LoginProps) => {
+  const [state, setState] = useState({
+    isLoading: false,
+    email: '',
+    password: '',
+    emailError: '',
+    passwordError: '',
+    mainError: '',
+  })
+
+  useEffect(() => {
+    setState({
+      ...state,
+      emailError: validation.validate('email', state.email),
+      passwordError: validation.validate('password', state.password),
+    })
+  }, [state.email, state.password])
+
   return (
-    <FormContextProvider>
-      <div className={styles.login}>
-        <Header />
+    <div className={styles.login}>
+      <Header />
+      <FormContext.Provider value={{ state, setState }}>
         <form className={styles.form}>
           <h2>Login</h2>
           <Input
@@ -34,9 +55,9 @@ const Login: React.FC = () => {
           <span className={styles.link}>criar conta</span>
           <FormStatus />
         </form>
-        <Footer />
-      </div>
-    </FormContextProvider>
+      </FormContext.Provider>
+      <Footer />
+    </div>
   )
 }
 
