@@ -42,12 +42,32 @@ describe('Login Component', () => {
     expect(emailStatus.textContent).toBe('🔴')
   })
 
-  test('should show password error if validation fails', () => {
+  test('should show password error if validation fails', async () => {
     const { sut, validationStub } = makeSut()
     const passwordInput = sut.getByTestId('password')
     const passwordStatus = sut.getByTestId('password-status')
-    userEvent.type(passwordInput, faker.internet.password())
+    await userEvent.type(passwordInput, faker.internet.password())
     expect(passwordStatus.title).toBe(validationStub.errorMessage)
     expect(passwordStatus.textContent).toBe('🔴')
+  })
+
+  test('should show valid email state if validation goes well', async () => {
+    const { sut, validationStub } = makeSut()
+    validationStub.errorMessage = null
+    const emailInput = sut.getByTestId('email')
+    const emailStatus = sut.getByTestId('email-status')
+    await userEvent.type(emailInput, faker.internet.email())
+    expect(emailStatus.title).toBe('GREAT!')
+    expect(emailStatus.textContent).toBe('🟢')
+  })
+
+  test('should show valid password state if validation goes well', async () => {
+    const { sut, validationStub } = makeSut()
+    validationStub.errorMessage = null
+    const passwordInput = sut.getByTestId('password')
+    const passwordStatus = sut.getByTestId('password-status')
+    await userEvent.type(passwordInput, faker.internet.password())
+    expect(passwordStatus.title).toBe('GREAT!')
+    expect(passwordStatus.textContent).toBe('🟢')
   })
 })

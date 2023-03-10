@@ -19,8 +19,11 @@ const Input: React.FC<InputProps> = (props: InputProps) => {
   }
 
   const getStatus = (): string => {
-    return '🔴'
-    // 🟢
+    return error ? '🔴' : '🟢'
+  }
+
+  const getTitle = (): string => {
+    return error || 'GREAT!'
   }
 
   return (
@@ -28,7 +31,7 @@ const Input: React.FC<InputProps> = (props: InputProps) => {
       <input {...props} data-testid={props.name} onChange={handleChange} />
       <span
         data-testid={`${props.name}-status`}
-        title={`${error}`}
+        title={getTitle()}
         className={styles.status}
       >
         {getStatus()}
