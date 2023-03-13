@@ -1,8 +1,9 @@
 import React from 'react'
-import { render, RenderResult, screen } from '@testing-library/react'
+import { render, RenderResult, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Login from './login'
 import { ValidationStub, AuthenticationSpy } from '@/presentation/test'
+import { InvalidCredentialError } from '@/domain/errors'
 import faker from 'faker'
 
 type SutTypes = {
@@ -48,7 +49,20 @@ const simulateStatus = (
   expect(status.textContent).toBe(validationError ? '🔴' : '🟢')
 }
 
+const submitValidForm = async (
+  sut: RenderResult,
+  email = faker.internet.email(),
+  password = faker.internet.password()
+) => {
+  await populateEmail(sut, email)
+  await populatePassword(sut, password)
+  const button = sut.getByTestId('submit')
+  await userEvent.click(button)
+}
+
 describe('Login Component', () => {
+  beforeEach(() => localStorage.clear())
+
   test('should have initial state', () => {
     const { sut, validationStub } = makeSut()
     const bottomWrapper = sut.getByTestId('bottom-wrapper')
@@ -97,10 +111,7 @@ describe('Login Component', () => {
   test('should show spinner on submit', async () => {
     const { sut, validationStub } = makeSut()
     validationStub.errorMessage = null
-    await populateEmail(sut)
-    await populatePassword(sut)
-    const button = sut.getByTestId('submit')
-    await userEvent.click(button)
+    await submitValidForm(sut)
     const spinner = sut.getByTestId('spinner')
     expect(spinner).toBeTruthy()
   })
@@ -110,10 +121,7 @@ describe('Login Component', () => {
     validationStub.errorMessage = null
     const email = faker.internet.email()
     const password = faker.internet.password()
-    await populateEmail(sut, email)
-    await populatePassword(sut, password)
-    const button = sut.getByTestId('submit')
-    await userEvent.click(button)
+    await submitValidForm(sut, email, password)
     expect(authenticationSpy.params).toEqual({ email, password })
   })
 
@@ -125,5 +133,17 @@ describe('Login Component', () => {
     const button = sut.getByTestId('submit')
     await userEvent.dblClick(button)
     expect(authenticationSpy.callsCount).toBe(1)
+  })
+
+  test('should show error if authentication fails', async () => {
+    const { sut, authenticationSpy, validationStub } = makeSut()
+    validationStub.errorMessage = null
+    const error = new InvalidCredentialError()
+    jest.spyOn(authenticationSpy, 'auth').mockRejectedValueOnce(error)
+    await submitValidForm(sut)
+    const bottomWrapper = sut.getByTestId('bottom-wrapper')
+    await waitFor(() => bottomWrapper)
+    const mainError = sut.getByTestId('main-error')
+    expect(mainError.textContent).toBe(error.message)
   })
 })
