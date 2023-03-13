@@ -1,5 +1,6 @@
 import React from 'react'
 import { render, RenderResult, waitFor } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import Login from './login'
 import { ValidationStub, AuthenticationSpy } from '@/presentation/test'
@@ -18,10 +19,18 @@ const makeSut = (): SutTypes => {
   const errorMessage = faker.random.words()
   validationStub.errorMessage = errorMessage
   const sut = render(
-    <Login validation={validationStub} authentication={authenticationSpy} />
+    <BrowserRouter>
+      <Login validation={validationStub} authentication={authenticationSpy} />
+    </BrowserRouter>
   )
   return { sut, validationStub, authenticationSpy }
 }
+
+const mockUseNavigate = jest.fn()
+jest.mock('react-router-dom', () => ({
+  ...(jest.requireActual('react-router-dom') as any),
+  useNavigate: () => mockUseNavigate,
+}))
 
 const populateEmail = async (
   sut: RenderResult,
@@ -145,5 +154,12 @@ describe('Login Component', () => {
     await waitFor(() => bottomWrapper)
     const mainError = sut.getByTestId('main-error')
     expect(mainError.textContent).toBe(error.message)
+  })
+
+  test('should navigate to signup page when link is clicked', async () => {
+    const { sut } = makeSut()
+    const signup = sut.getByTestId('signup')
+    await userEvent.click(signup)
+    expect(mockUseNavigate).toHaveBeenCalledWith('/signup')
   })
 })

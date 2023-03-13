@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styles from './login-styles.scss'
 import { Header, Footer, FormStatus, Input } from '@/presentation/components'
 import { FormContext } from '@/presentation/contexts/form-context'
@@ -22,6 +23,8 @@ const Login: React.FC<LoginProps> = ({
     passwordError: '',
     mainError: '',
   })
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     setState({
@@ -80,7 +83,13 @@ const Login: React.FC<LoginProps> = ({
           >
             Entrar
           </button>
-          <span className={styles.link}>criar conta</span>
+          <span
+            onClick={() => navigate('/signup')}
+            data-testid="signup"
+            className={styles.link}
+          >
+            criar conta
+          </span>
           <FormStatus />
         </form>
       </FormContext.Provider>
