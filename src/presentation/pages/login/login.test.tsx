@@ -116,4 +116,14 @@ describe('Login Component', () => {
     await userEvent.click(button)
     expect(authenticationSpy.params).toEqual({ email, password })
   })
+
+  test('should call authentication only once', async () => {
+    const { sut, validationStub, authenticationSpy } = makeSut()
+    validationStub.errorMessage = null
+    await populateEmail(sut)
+    await populatePassword(sut)
+    const button = sut.getByTestId('submit')
+    await userEvent.dblClick(button)
+    expect(authenticationSpy.callsCount).toBe(1)
+  })
 })
