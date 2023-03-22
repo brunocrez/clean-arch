@@ -1,18 +1,13 @@
-import { HttpPostParams } from '@/data/protocols/http'
-
 import axios from 'axios'
 import faker from 'faker'
 
-export const mockAxios = axios as jest.Mocked<typeof axios>
-
-export const mockResponse = {
+export const mockHttpResponse = (): unknown => ({
+  data: faker.random.objectElement(),
   status: faker.datatype.number(),
-  data: faker.random.objectElement()
-}
-
-mockAxios.post.mockResolvedValue(mockResponse)
-
-export const mockPostRequest = (): HttpPostParams<unknown> => ({
-  url: faker.internet.url(),
-  body: faker.random.objectElement()
 })
+
+export const mockAxios = (): jest.Mocked<typeof axios> => {
+  const mockedAxios = axios as jest.Mocked<typeof axios>
+  mockedAxios.request.mockClear().mockResolvedValue(mockHttpResponse())
+  return mockedAxios
+}

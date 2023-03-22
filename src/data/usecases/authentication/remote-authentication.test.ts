@@ -1,72 +1,73 @@
-import { RemoteAuthentication } from './remote-authentication'
-import { HttpPostClientSpy } from '@/data/test'
+import { RemoteAuthentication } from '@/data/usecases'
+import { HttpClientSpy } from '@/data/test'
 import { mockAccountModel, mockAuth } from '@/domain/test'
 import { InvalidCredentialError, UnexpectedError } from '@/domain/errors'
 import { HttpStatusCode } from '@/data/protocols/http'
-import { AuthenticationParams } from '@/domain/usecases'
-import { AccountModel } from '@/domain/models'
 import faker from 'faker'
 
 type SutTypes = {
   sut: RemoteAuthentication
-  httpPostClient: HttpPostClientSpy<AuthenticationParams, AccountModel>
+  httpClient: HttpClientSpy<RemoteAuthentication.Model>
 }
 
 const makeSut = (url = faker.internet.url()): SutTypes => {
-  const httpPostClient = new HttpPostClientSpy<AuthenticationParams, AccountModel>()
-  const sut = new RemoteAuthentication(url, httpPostClient)
-  return { sut, httpPostClient }
+  const httpClient = new HttpClientSpy<RemoteAuthentication.Model>()
+  const sut = new RemoteAuthentication(url, httpClient)
+  return {
+    sut,
+    httpClient,
+  }
 }
 
 describe('RemoteAuthentication', () => {
-  test('should call http client with correct URL', async () => {
+  test('should call http client with correct URL and method', async () => {
     const url = faker.internet.url()
-    const { sut, httpPostClient } = makeSut(url)
+    const { sut, httpClient } = makeSut(url)
     await sut.auth(mockAuth())
-    expect(httpPostClient.url).toBe(url)
+    expect(httpClient.url).toBe(url)
   })
 
   test('should call http client with correct body', async () => {
     const mock = mockAuth()
-    const { sut, httpPostClient } = makeSut()
+    const { sut, httpClient } = makeSut()
     await sut.auth(mock)
-    expect(httpPostClient.body).toEqual(mock)
+    expect(httpClient.body).toEqual(mock)
   })
 
   test('should throw UnexpectedError when http post client returns 400', async () => {
-    const { sut, httpPostClient } = makeSut()
-    httpPostClient.response = { statusCode: HttpStatusCode.BAD_REQUEST }
+    const { sut, httpClient } = makeSut()
+    httpClient.response = { statusCode: HttpStatusCode.BAD_REQUEST }
     const promise = sut.auth(mockAuth())
     await expect(promise).rejects.toThrow(new UnexpectedError())
   })
 
   test('should throw InvalidCredentialError when http post client returns 401', async () => {
-    const { sut, httpPostClient } = makeSut()
-    httpPostClient.response = { statusCode: HttpStatusCode.UNAUTHORIZED }
+    const { sut, httpClient } = makeSut()
+    httpClient.response = { statusCode: HttpStatusCode.UNAUTHORIZED }
     const promise = sut.auth(mockAuth())
     await expect(promise).rejects.toThrow(new InvalidCredentialError())
   })
 
   test('should throw UnexpectedError when http post client returns 404', async () => {
-    const { sut, httpPostClient } = makeSut()
-    httpPostClient.response = { statusCode: HttpStatusCode.NOT_FOUND }
+    const { sut, httpClient } = makeSut()
+    httpClient.response = { statusCode: HttpStatusCode.NOT_FOUND }
     const promise = sut.auth(mockAuth())
     await expect(promise).rejects.toThrow(new UnexpectedError())
   })
 
   test('should throw UnexpectedError when http post client returns 500', async () => {
-    const { sut, httpPostClient } = makeSut()
-    httpPostClient.response = { statusCode: HttpStatusCode.SERVER_ERROR }
+    const { sut, httpClient } = makeSut()
+    httpClient.response = { statusCode: HttpStatusCode.SERVER_ERROR }
     const promise = sut.auth(mockAuth())
     await expect(promise).rejects.toThrow(new UnexpectedError())
   })
 
   test('should return an AccountModel when http post client returns 200', async () => {
-    const { sut, httpPostClient } = makeSut()
+    const { sut, httpClient } = makeSut()
     const httpResponse = mockAccountModel()
-    httpPostClient.response = {
+    httpClient.response = {
       statusCode: HttpStatusCode.SUCCESS,
-      body: httpResponse
+      body: httpResponse,
     }
     const promise = await sut.auth(mockAuth())
     expect(promise).toEqual(httpResponse)
